@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class YankiImpl implements YankiService
@@ -77,5 +78,20 @@ public class YankiImpl implements YankiService
             else
                 return Mono.empty();
         });
+    }
+
+    @Override
+    public Mono<Yanki> updateMont(String id, Float mont) {
+        return dao.findById(id).flatMap(yanki -> {
+            yanki.setMont(yanki.getMont() + mont);
+            return dao.save(yanki);
+        }).switchIfEmpty(Mono.empty());
+    }
+
+    @Override
+    public Mono<Yanki> findByPhoneNumber(String phoneNumber) {
+        return findAll().flatMap(yankis ->
+            Mono.just(Objects.requireNonNull(yankis.stream().filter(yanki -> yanki.getPhoneNumber().equals(phoneNumber)).findFirst().orElse(null)))
+        );
     }
 }

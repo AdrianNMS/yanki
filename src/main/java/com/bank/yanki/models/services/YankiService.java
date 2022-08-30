@@ -12,4 +12,7 @@ public interface YankiService
     Mono<Yanki> create(Yanki yanki);
     Mono<Yanki> update(String id, Yanki yanki);
     Mono<Object> delete(String id);
+    Mono<Yanki> updateMont(String id, Float mont);
+
+    Mono<Yanki> findByPhoneNumber(String phoneNumber);
 }
