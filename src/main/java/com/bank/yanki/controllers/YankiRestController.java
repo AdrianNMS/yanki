@@ -79,10 +79,14 @@ public class YankiRestController
 
         log.info(userCheck);
 
+
+
         yankiService.findByPhoneNumber(userCheck).subscribe(yanki -> {
+            var status = (yanki!=null && yanki.getMont()>=requestYanki.getMont());
+
             var response = ResponseTransference.builder()
                     .idTransference(requestYanki.getIdTransference())
-                    .status(yanki.getMont()>=requestYanki.getMont())
+                    .status(status)
                     .build();
 
             log.info(response.toString());
