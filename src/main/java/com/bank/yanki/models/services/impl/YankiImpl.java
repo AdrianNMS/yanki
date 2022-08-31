@@ -82,7 +82,7 @@ public class YankiImpl implements YankiService
 
     @Override
     public Mono<Yanki> updateMont(String id, Float mont) {
-        return dao.findById(id).flatMap(yanki -> {
+        return findByPhoneNumber(id).flatMap(yanki -> {
             yanki.setMont(yanki.getMont() + mont);
             return dao.save(yanki);
         }).switchIfEmpty(Mono.empty());

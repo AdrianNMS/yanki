@@ -117,6 +117,7 @@ public class YankiRestController
     public void receiveUpdateMonts(@Payload RequestYanki requestYanki)
     {
         log.info("[INI] receiveUpdateMonts");
+        log.info(requestYanki.toString());
 
         var user1Check = (requestYanki.getTransferenceType() == TransferenceType.BUY)
                 ? requestYanki.getPhoneNumberSender() : requestYanki.getPhoneNumberReceiver();
@@ -137,7 +138,7 @@ public class YankiRestController
                                     log.info(yanki1.toString());
                                     template.send("transference_yanki-update",ResponseTransference.builder()
                                             .idTransference(requestYanki.getIdTransference())
-                                            .status((yanki1!=null))
+                                            .status((true))
                                             .build());
                                 });
                     else
