@@ -32,54 +32,69 @@ public class YankiRestController
 
     @PostMapping
     public Mono<ResponseEntity<Object>> create(@Validated @RequestBody Yanki yan) {
+        log.info("[INI] create");
+
         return yankiService.create(yan)
                 .doOnNext(wallet -> log.info(wallet.toString()))
                 .flatMap(wallet -> Mono.just(ResponseHandler.response("Done", HttpStatus.OK, wallet)))
-                .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)));
+                .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)))
+                .doFinally(fin -> log.info("[END] create"));
     }
 
     @GetMapping
     public Mono<ResponseEntity<Object>> findAll() {
+        log.info("[INI] findAll");
+
         return yankiService.findAll()
                 .doOnNext(wallets -> log.info(wallets.toString()))
                 .flatMap(wallets -> Mono.just(ResponseHandler.response("Done", HttpStatus.OK, wallets)))
-                .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)));
+                .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)))
+                .doFinally(fin -> log.info("[END] findAll"));
 
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Object>> find(@PathVariable String id) {
+        log.info("[INI] find");
+
         return yankiService.find(id)
                 .doOnNext(wallet -> log.info(wallet.toString()))
                 .map(wallet -> ResponseHandler.response("Done", HttpStatus.OK, wallet))
-                .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)));
+                .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)))
+                .doFinally(fin -> log.info("[END] find"));
     }
 
     @PutMapping("/{id}")
     public Mono<ResponseEntity<Object>> update(@PathVariable("id") String id,@Validated @RequestBody Yanki yan) {
+        log.info("[INI] update");
+
         return yankiService.update(id,yan)
                 .flatMap(wallet -> Mono.just(ResponseHandler.response("Done", HttpStatus.OK, wallet)))
                 .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)))
-                .switchIfEmpty(Mono.just(ResponseHandler.response("Empty", HttpStatus.NO_CONTENT, null)));
+                .switchIfEmpty(Mono.just(ResponseHandler.response("Empty", HttpStatus.NO_CONTENT, null)))
+                .doFinally(fin -> log.info("[END] update"));
     }
 
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Object>> delete(@PathVariable("id") String id) {
+        log.info("[INI] delete");
+
         return yankiService.delete(id)
                 .flatMap(o -> Mono.just(ResponseHandler.response("Done", HttpStatus.OK, null)))
                 .onErrorResume(error -> Mono.just(ResponseHandler.response(error.getMessage(), HttpStatus.BAD_REQUEST, null)))
-                .switchIfEmpty(Mono.just(ResponseHandler.response("Error", HttpStatus.NO_CONTENT, null)));
+                .switchIfEmpty(Mono.just(ResponseHandler.response("Error", HttpStatus.NO_CONTENT, null)))
+                .doFinally(fin -> log.info("[END] delete"));
     }
 
     @KafkaListener(topics = "yanki-check", groupId = "yanki")
     public void receiveCheckMont(@Payload RequestYanki requestYanki)
     {
+        log.info("[INI] receiveCheckMont");
+
         var userCheck = (requestYanki.getTransferenceType() == TransferenceType.BUY)
                 ? requestYanki.getPhoneNumberSender() : requestYanki.getPhoneNumberReceiver();
 
         log.info(userCheck);
-
-
 
         yankiService.findByPhoneNumber(userCheck).subscribe(yanki -> {
             var status = (yanki!=null && yanki.getMont()>=requestYanki.getMont());
@@ -93,12 +108,16 @@ public class YankiRestController
 
             template.send("transference_yanki-check",response);
 
+            log.info("[END] receiveCheckMont");
+
         });
     }
 
     @KafkaListener(topics = "yanki-update", groupId = "yanki")
     public void receiveUpdateMonts(@Payload RequestYanki requestYanki)
     {
+        log.info("[INI] receiveUpdateMonts");
+
         var user1Check = (requestYanki.getTransferenceType() == TransferenceType.BUY)
                 ? requestYanki.getPhoneNumberSender() : requestYanki.getPhoneNumberReceiver();
         var user2Check = (requestYanki.getTransferenceType() == TransferenceType.BUY)
@@ -126,6 +145,8 @@ public class YankiRestController
                                 .idTransference(requestYanki.getIdTransference())
                                 .status(false)
                                 .build());
+
+                    log.info("[END] receiveUpdateMonts");
                 });
     }
 }
